@@ -4,13 +4,13 @@ import os
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'briefmarken-geheim-schluessel-2025')
+app.secret_key = os.environ.get('SECRET_KEY')
 
 # Path to the parquet file
 PARQUET_FILE = 'stamps.parquet'
 
 # Password for adding stamps (can be set via environment variable)
-ADD_STAMP_PASSWORD = os.environ.get('STAMP_PASSWORD', 'briefmarke2025')
+ADD_STAMP_PASSWORD = os.environ.get('STAMP_PASSWORD')
 
 # Initialize the parquet file if it doesn't exist
 def init_database():
