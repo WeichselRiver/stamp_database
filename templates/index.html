@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Briefmarken Datenbank</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .required {
+            color: #e74c3c;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        #stamps-list {
+            margin-top: 20px;
+        }
+        
+        .stamp-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .stamp-item strong {
+            color: #667eea;
+        }
+        
+        .stamp-actions {
+            margin-top: 10px;
+        }
+        
+        .delete-btn {
+            background: #e74c3c;
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+        
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .modal h2 {
+            margin-top: 0;
+        }
+        
+        .logout-btn {
+            background: #95a5a6;
+            padding: 8px 15px;
+            font-size: 14px;
+            float: right;
+            margin-bottom: 20px;
+        }
+        
+        .logout-btn:hover {
+            background: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <h2>🔐 Anmeldung erforderlich</h2>
+            <p>Bitte geben Sie das Passwort ein, um Briefmarken hinzuzufügen:</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-password">Passwort</label>
+                    <input type="password" id="login-password" name="password" required autofocus>
+                </div>
+                <button type="submit">Anmelden</button>
+            </form>
+            <div id="login-error" class="message error" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h1>📮 Briefmarken Datenbank</h1>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="/summary" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 5px; display: inline-block;">📊 Zur Übersicht</a>
+        </div>
+        
+        <div class="card">
+            <button class="logout-btn" onclick="logout()">Abmelden</button>
+            <h2>Neue Briefmarke hinzufügen</h2>
+            
+            <div id="message" class="message"></div>
+            
+            <form id="stamp-form">
+                <div class="form-group">
+                    <label for="katalog_id">Katalog-ID</label>
+                    <input type="text" id="katalog_id" name="katalog_id" placeholder="z.B. Michel 123">
+                </div>
+                
+                <div class="form-group">
+                    <label for="Gebiet">Gebiet <span class="required">*</span></label>
+                    <input type="text" id="Gebiet" name="Gebiet" placeholder="z.B. Deutschland, USA" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="jahr">Jahr <span class="required">*</span></label>
+                    <input type="number" id="jahr" name="jahr" placeholder="z.B. 1995" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="nennwert">Nennwert <span class="required">*</span></label>
+                    <input type="text" id="nennwert" name="nennwert" placeholder="z.B. 80 Cent" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="beschreibung">Beschreibung</label>
+                    <textarea id="beschreibung" name="beschreibung" placeholder="Beschreibung der Briefmarke"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="erhaltung">Erhaltung</label>
+                    <input type="text" id="erhaltung" name="erhaltung" placeholder="z.B. Postfrisch, Gestempelt">
+                </div>
+                
+                <div class="form-group">
+                    <label for="variante">Variante</label>
+                    <input type="text" id="variante" name="variante" placeholder="z.B. Farbvariante, Zähnung">
+                </div>
+                
+                <button type="submit">Briefmarke hinzufügen</button>
+            </form>
+        </div>
+        
+        <div class="card">
+            <h2>Alle Briefmarken</h2>
+            <div id="stamps-list">Lädt...</div>
+        </div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('stamp-form');
+        const messageDiv = document.getElementById('message');
+        const stampsList = document.getElementById('stamps-list');
+        const loginModal = document.getElementById('login-modal');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        
+        // Check authentication on page load
+        checkAuth();
+        
+        // Load stamps on page load
+        loadStamps();
+        
+        // Handle login form
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const password = document.getElementById('login-password').value;
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password })
+                });
+                
+                if (response.ok) {
+                    loginModal.style.display = 'none';
+                    loginForm.reset();
+                } else {
+                    loginError.textContent = 'Falsches Passwort';
+                    loginError.style.display = 'block';
+                }
+            } catch (error) {
+                loginError.textContent = 'Fehler bei der Anmeldung';
+                loginError.style.display = 'block';
+            }
+        });
+        
+        // Check if user is authenticated
+        async function checkAuth() {
+            try {
+                const response = await fetch('/check-auth');
+                const data = await response.json();
+                
+                if (!data.authenticated) {
+                    loginModal.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+            }
+        }
+        
+        // Logout function
+        async function logout() {
+            try {
+                await fetch('/logout', { method: 'POST' });
+                loginModal.style.display = 'block';
+                showMessage('Erfolgreich abgemeldet', 'success');
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        }
+        
+        // Handle form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                katalog_id: document.getElementById('katalog_id').value,
+                Gebiet: document.getElementById('Gebiet').value,
+                jahr: parseInt(document.getElementById('jahr').value),
+                nennwert: document.getElementById('nennwert').value,
+                beschreibung: document.getElementById('beschreibung').value,
+                erhaltung: document.getElementById('erhaltung').value,
+                variante: document.getElementById('variante').value
+            };
+            
+            try {
+                const response = await fetch('/stamps', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('Briefmarke erfolgreich hinzugefügt!', 'success');
+                    form.reset();
+                    loadStamps();
+                } else {
+                    showMessage(`Fehler: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showMessage('Fehler beim Hinzufügen der Briefmarke', 'error');
+                console.error(error);
+            }
+        });
+        
+        // Show message function
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Load all stamps
+        async function loadStamps() {
+            try {
+                const response = await fetch('/stamps');
+                const stamps = await response.json();
+                
+                if (stamps.length === 0) {
+                    stampsList.innerHTML = '<p>Noch keine Briefmarken in der Datenbank.</p>';
+                    return;
+                }
+                
+                stampsList.innerHTML = stamps.map(stamp => `
+                    <div class="stamp-item">
+                        <div><strong>ID:</strong> ${stamp.database_id}</div>
+                        ${stamp.katalog_id ? `<div><strong>Katalog-ID:</strong> ${stamp.katalog_id}</div>` : ''}
+                        <div><strong>Gebiet:</strong> ${stamp.Gebiet}</div>
+                        <div><strong>Jahr:</strong> ${stamp.jahr}</div>
+                        <div><strong>Nennwert:</strong> ${stamp.nennwert}</div>
+                        ${stamp.beschreibung ? `<div><strong>Beschreibung:</strong> ${stamp.beschreibung}</div>` : ''}
+                        ${stamp.erhaltung ? `<div><strong>Erhaltung:</strong> ${stamp.erhaltung}</div>` : ''}
+                        ${stamp.variante ? `<div><strong>Variante:</strong> ${stamp.variante}</div>` : ''}
+                        <div class="stamp-actions">
+                            <button class="delete-btn" onclick="deleteStamp(${stamp.database_id})">Löschen</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                stampsList.innerHTML = '<p>Fehler beim Laden der Briefmarken.</p>';
+                console.error(error);
+            }
+        }
+        
+        // Delete stamp function
+        async function deleteStamp(id) {
+            if (!confirm('Möchten Sie diese Briefmarke wirklich löschen?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/stamps/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showMessage('Briefmarke erfolgreich gelöscht!', 'success');
+                    loadStamps();
+                } else {
+                    showMessage('Fehler beim Löschen der Briefmarke', 'error');
+                }
+            } catch (error) {
+                showMessage('Fehler beim Löschen der Briefmarke', 'error');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
