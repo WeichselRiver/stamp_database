@@ -57,13 +57,13 @@ def get_next_id():
         return 1
     return int(df['database_id'].max()) + 1
 
-@app.route('/')
+@app.route('/add')
 def home():
-    return render_template('index.html')
+    return render_template('add.html')
 
-@app.route('/summary')
-def summary():
-    return render_template('summary.html')
+@app.route('/')
+def add():
+    return render_template('index.html')
 
 @app.route('/api')
 def api_info():
